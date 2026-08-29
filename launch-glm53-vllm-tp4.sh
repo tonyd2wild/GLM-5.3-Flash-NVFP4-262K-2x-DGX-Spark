@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# GLM-5.3-Flash-NVFP4 TP4 across all four Sparks. Head = Reddie (192.168.192.2,
-# keeps the :8000 endpoint). fp8 KV + MTP-4 + thinking-off, sm121-v8 image.
-# Launch WORKER-FIRST: rank 3 (Bluey) -> 2 (Asusi) -> 1 (Spark4) -> head 0 (Reddie).
-# Run cache_flusher.sh alongside on every node (GB10 NVRM allocator, see repo docs).
+# GLM-5.3-Flash-NVFP4 TP4. This fleet has only TWO nodes (spark-1140 .10,
+# gx10-05a3 .11) on 192.168.100.0/24. Ranks 2 and 3 have no hosts — use
+# launch-glm53-vllm-tp2-dflash2.sh. Fill in rank 2/3 IPs if two more Sparks
+# are cabled on. TP4 / 1M-context README numbers were measured on a different
+# four-node 192.168.192.0/24 fabric.
 NODE_RANK="${1:?usage: launch-glm53-vllm-tp4.sh <0|1|2|3>}"
 
 IMAGE="radixark/vllm-glm53-flash:sm121-v8"
 NAME="vllm_glm53"
-MODEL_HOST_PATH="/var/tmp/glm-5.3-flash-nvfp4"
-MODEL_PATH="/models/glm-5.3-flash-nvfp4"
+MODEL_HOST_PATH="/var/tmp/glm-5.3-flash-derisked-nvfp4"
+MODEL_PATH="/models/glm-5.3-flash-derisked-nvfp4"
 CACHE_HOST_PATH="/var/tmp/glm53-vllm-cache"
-HEAD_IP="192.168.192.2"
+HEAD_IP="192.168.100.10"
 MPORT="29521"
 PORT="8000"
 
 case "$NODE_RANK" in
-  0) HOST_IP=192.168.192.2; HEADLESS="" ;;
-  1) HOST_IP=192.168.192.4; HEADLESS="--headless" ;;
-  2) HOST_IP=192.168.192.3; HEADLESS="--headless" ;;
-  3) HOST_IP=192.168.192.1; HEADLESS="--headless" ;;
+  0) HOST_IP=192.168.100.10; HEADLESS="" ;;            # spark-1140
+  1) HOST_IP=192.168.100.11; HEADLESS="--headless" ;;  # gx10-05a3
+  2) echo "rank 2: no third node on this fabric -- see header" >&2; exit 2 ;;
+  3) echo "rank 3: no fourth node on this fabric -- see header" >&2; exit 2 ;;
   *) echo "rank must be 0-3" >&2; exit 2 ;;
 esac
 
@@ -45,7 +46,7 @@ docker run --gpus all -d \
   -e NCCL_NET=IB -e NCCL_IB_DISABLE=0 \
   -e NCCL_IB_HCA=rocep1s0f0 -e NCCL_IB_GID_INDEX=3 \
   -e NCCL_IB_ROCE_VERSION_NUM=2 -e NCCL_IB_ADDR_FAMILY=AF_INET \
-  -e NCCL_IB_ADDR_RANGE=192.168.192.0/24 \
+  -e NCCL_IB_ADDR_RANGE=192.168.100.0/24 \
   -e NCCL_SOCKET_IFNAME=enp1s0f0np0 -e GLOO_SOCKET_IFNAME=enp1s0f0np0 \
   -e TP_SOCKET_IFNAME=enp1s0f0np0 -e MN_IF_NAME=enp1s0f0np0 \
   -e NCCL_NVLS_ENABLE=0 -e NCCL_CROSS_NIC=0 -e NCCL_IB_MERGE_NICS=0 \

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # fleet_watchdog.sh -- auto-recovery for the GLM-5.3 vLLM multi-node fleet.
-# Runs on Reddie (head, rank 0). Probes /health; on N consecutive failures,
+# Runs on spark-1140 (head, rank 0). Probes /health; on N consecutive failures,
 # tears down ALL containers, runs the GB10 memory ritual, relaunches
-# workers-first (rank 3 -> 2 -> 1) then the head (rank 0), waits for ready.
+# worker-first (rank 1) then the head (rank 0), waits for ready.
 #
 # vLLM v1 CANNOT recover a dead engine core. Docker restart policies are unsafe
 # here: headless workers exit 0 on head death (on-failure never fires) and the
@@ -18,7 +18,9 @@ FAIL_THRESHOLD=3           # consecutive failures before recovery fires
 CURL_TIMEOUT=15            # per-probe timeout
 READY_TIMEOUT=3600         # matches VLLM_ENGINE_READY_TIMEOUT_S in launch script
 CONTAINER="vllm_glm53"
-LAUNCH_SCRIPT='~/launch-glm53-vllm-tp4.sh'   # same path on every node
+# Same path on every node, byte-identical copies. Rank 0 is launched through
+# run_on too, so this path must exist locally as well.
+LAUNCH_SCRIPT="$HOME/GLM-5.3-Flash-NVFP4-DFlash2-2x-DGX-Spark/launch-glm53-vllm-tp2-dflash2.sh"
 SSH_KEY="$HOME/.ssh/id_ed25519_shared"
 SSH_OPTS=(-i "$SSH_KEY" -o ConnectTimeout=15 -o BatchMode=yes -o StrictHostKeyChecking=accept-new)
 LOCKFILE="$HOME/.fleet_watchdog.lock"
@@ -27,12 +29,11 @@ POST_TEARDOWN_SLEEP=10     # let master-port TIME_WAIT / NVRM settle
 INTER_WORKER_SLEEP=5
 
 # rank -> ssh target; empty string = local (head). Launch order is the
-# ARRAY ORDER below: workers 3,2,1 first, head 0 last.
-RANK_ORDER=(3 2 1 0)
+# ARRAY ORDER below: worker 1 first, head 0 last.
+# Two-node fleet: spark-1140 (.10) + gx10-05a3 (.11) on 192.168.100.0/24.
+RANK_ORDER=(1 0)
 declare -A NODE=(
-  [3]="tonyspark1@192.168.192.1"
-  [2]="tonyspark3@192.168.192.3"
-  [1]="tonyspark4@192.168.192.4"
+  [1]="zeus@192.168.100.11"
   [0]=""
 )
 ### -------------------------------------------------------------------------
@@ -74,7 +75,7 @@ recover() {
     mem_ritual "$r"
   done
 
-  # 3. Relaunch: workers rank 3 -> 2 -> 1, then head rank 0.
+  # 3. Relaunch: worker rank 1, then head rank 0.
   for r in "${RANK_ORDER[@]}"; do
     log "launch rank $r on ${NODE[$r]:-local}"
     if ! run_on "$r" "$LAUNCH_SCRIPT $r"; then
@@ -83,7 +84,7 @@ recover() {
     [[ "$r" != "0" ]] && sleep "$INTER_WORKER_SLEEP"
   done
 
-  # 4. Wait for the engine to come up (TP4 load takes many minutes).
+  # 4. Wait for the engine to come up (TP2 load takes many minutes).
   log "waiting up to ${READY_TIMEOUT}s for $HEALTH_URL"
   local waited=0
   until healthy; do

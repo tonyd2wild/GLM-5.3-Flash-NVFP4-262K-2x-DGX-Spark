@@ -1,25 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# GLM-5.3-Flash-NVFP4 on Reddie (head, rank 0) + Spark4 (worker, rank 1), vLLM TP2 over the fabric.
-# Official day-0 image (vLLM has glm5_next; SGLang support for this NVFP4 quant is still in-flight).
-# Day-1: NO speculative decode. MTP phase-2 after base is stable (image has Glm5NextMTPModel).
-# Run worker FIRST: Spark4 rank 1, wait ~20s, then Reddie rank 0.
+# GLM-5.3-Flash-DERISKED-NVFP4 MTP fallback on spark-1140 (head, rank 0) +
+# gx10-05a3 (worker, rank 1), vLLM TP2 over 192.168.100.0/24.
+# DFlash2 production lane is launch-glm53-vllm-tp2-dflash2.sh; this script is
+# the MTP-4 fallback (sm121-v8, no drafter overlay).
+# Run worker FIRST: gx10-05a3 rank 1, wait ~20s, then spark-1140 rank 0.
 NODE_RANK="${1:?usage: launch-glm53-vllm-tp2.sh <0|1>}"
 [[ "$NODE_RANK" == "0" || "$NODE_RANK" == "1" ]] || { echo "rank must be 0 or 1" >&2; exit 2; }
 
 IMAGE="radixark/vllm-glm53-flash:sm121-v8"
 NAME="vllm_glm53"
-MODEL_HOST_PATH="/var/tmp/glm-5.3-flash-nvfp4"
-MODEL_PATH="/models/glm-5.3-flash-nvfp4"
+MODEL_HOST_PATH="/var/tmp/glm-5.3-flash-derisked-nvfp4"
+MODEL_PATH="/models/glm-5.3-flash-derisked-nvfp4"
 CACHE_HOST_PATH="/var/tmp/glm53-vllm-cache"
-HEAD_IP="192.168.192.2"
+HEAD_IP="192.168.100.10"
 MPORT="29521"
 PORT="8000"
 
 case "$NODE_RANK" in
-  0) HOST_IP=192.168.192.2; HEADLESS="" ;;
-  1) HOST_IP=192.168.192.4; HEADLESS="--headless" ;;
+  0) HOST_IP=192.168.100.10; HEADLESS="" ;;          # spark-1140
+  1) HOST_IP=192.168.100.11; HEADLESS="--headless" ;;  # gx10-05a3
 esac
 
 test -f "$MODEL_HOST_PATH/config.json"
@@ -43,7 +44,7 @@ docker run --gpus all -d \
   -e NCCL_NET=IB -e NCCL_IB_DISABLE=0 \
   -e NCCL_IB_HCA=rocep1s0f0 -e NCCL_IB_GID_INDEX=3 \
   -e NCCL_IB_ROCE_VERSION_NUM=2 -e NCCL_IB_ADDR_FAMILY=AF_INET \
-  -e NCCL_IB_ADDR_RANGE=192.168.192.0/24 \
+  -e NCCL_IB_ADDR_RANGE=192.168.100.0/24 \
   -e NCCL_SOCKET_IFNAME=enp1s0f0np0 -e GLOO_SOCKET_IFNAME=enp1s0f0np0 \
   -e TP_SOCKET_IFNAME=enp1s0f0np0 -e MN_IF_NAME=enp1s0f0np0 \
   -e NCCL_NVLS_ENABLE=0 -e NCCL_CROSS_NIC=0 -e NCCL_IB_MERGE_NICS=0 \

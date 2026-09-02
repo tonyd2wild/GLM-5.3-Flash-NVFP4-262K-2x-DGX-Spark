@@ -122,6 +122,8 @@ recovers it or a reboot is required.
 
 ## 5. Pinning `--kv-cache-memory` silently removes the activation reservation
 
+> Superseded by the shipped launcher / [#16](../../pull/16): TP2 now pins 6442450944 (6 GiB), a measured pin validated under load — the sharp edge below is why it is measured rather than guessed. See [TP2-SPEC-DEPTH-AND-KV-2026-09-02](TP2-SPEC-DEPTH-AND-KV-2026-09-02.md).
+
 Not a bug so much as a very sharp edge, documented here because it cost us most of a night
 and the failure mode is deeply misleading.
 
@@ -162,6 +164,8 @@ pre-launch flush is untested.
 ---
 
 ## 7. Smaller open items
+
+> "CUDA graphs untested with DFlash2" below is superseded by the shipped launcher / [#16](../../pull/16): tested on TP2 2026-09-02 and flat (mean ≈ −0.3%), so TP2 keeps `--enforce-eager` — see [TP2-SPEC-DEPTH-AND-KV-2026-09-02](TP2-SPEC-DEPTH-AND-KV-2026-09-02.md).
 
 - **Vision is not speculated.** The drafter logs `does not support external multimodal
   embeddings … using text-only draft inputs`. Image requests work but get no speedup.

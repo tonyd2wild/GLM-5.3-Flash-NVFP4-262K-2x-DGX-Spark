@@ -130,7 +130,10 @@ Healthy runtime signatures:
 - Concurrency is bounded by free-memory headroom, not the pool: at
   `--kv-cache-memory 4445787956` a 3-way 20K-token prefill drove MemAvailable to
   3.06 GB and Tony's `dgx-anti-oom` watchdog (threshold 3 GB) killed the engine.
-  Shipping pin is **3221225472** (310,292-token pool) for headroom under load.
+  Shipping pin is **6442450944** (678,661-token pool) for headroom under load.
+  Changed in [#16](../../pull/16): the previous pin was **3221225472** (310,292-token pool),
+  which measured 6 preemptions under load where 6 GiB measured 0. See
+  [TP2-SPEC-DEPTH-AND-KV-2026-09-02](TP2-SPEC-DEPTH-AND-KV-2026-09-02.md).
 
 
 ## NVFP4-KV lane (partial)

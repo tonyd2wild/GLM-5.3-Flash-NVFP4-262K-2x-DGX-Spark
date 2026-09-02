@@ -10,8 +10,28 @@ NODE_RANK="${1:?usage: launch-glm53-vllm-tp2.sh <0|1>}"
 
 IMAGE="ghcr.io/tonyd2wild/vllm-glm53-flash:sm121-v8"
 NAME="vllm_glm53"
-MODEL_HOST_PATH="/var/tmp/glm-5.3-flash-nvfp4"
+# Checkpoint. The README's documented default is RedHatAI/GLM-5.3-Flash-NVFP4
+# (compressed-tensors) because the ModelOpt builds emit intermittent corrupted token IDs
+# -- vLLM #54150, measured 4/9/8 U+FFFD on a Hangul probe vs 0/0/0 for RedHatAI. The
+# launchers previously hardcoded the ModelOpt path, so the shipped default did not match
+# the documented one. Override with MODEL_HOST_PATH=... for the legacy/abliterated builds.
+MODEL_HOST_PATH="${MODEL_HOST_PATH:-/var/tmp/models/GLM-5.3-Flash-NVFP4-redhat}"
 MODEL_PATH="/models/glm-5.3-flash-nvfp4"
+
+# Guard: fail loudly if the resolved checkpoint is a ModelOpt build, unless the operator
+# opted in. This is the mismatch that shipped for weeks -- the corruption is nearly
+# invisible in English prose and only bites inside tool-call blocks, so it will not
+# announce itself at boot.
+if [ -f "$MODEL_HOST_PATH/config.json" ] && [ "${ALLOW_MODELOPT:-0}" != "1" ]; then
+  _q=$(python3 -c "import json;print(json.load(open('$MODEL_HOST_PATH/config.json')).get('quantization_config',{}).get('quant_method',''))" 2>/dev/null || echo "")
+  if [ "$_q" = "modelopt" ]; then
+    echo "REFUSING: $MODEL_HOST_PATH is a ModelOpt build (quant_method=modelopt)." >&2
+    echo "  ModelOpt NVFP4 emits intermittent corrupted token IDs (vLLM #54150)." >&2
+    echo "  Use RedHatAI/GLM-5.3-Flash-NVFP4, or set ALLOW_MODELOPT=1 to override." >&2
+    exit 5
+  fi
+fi
+
 CACHE_HOST_PATH="/var/tmp/glm53-vllm-cache"
 HEAD_IP="192.168.192.2"
 MPORT="29521"

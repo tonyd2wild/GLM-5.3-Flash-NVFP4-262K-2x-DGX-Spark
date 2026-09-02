@@ -92,7 +92,7 @@ docker run --gpus all -d \
     --tensor-parallel-size 2 \
     --gpu-memory-utilization 0.85 \
     --max-model-len 262144 \
-    --max-num-seqs 6 --block-size 2304 --moe-backend marlin --speculative-config '{"method":"dflash","model":"/models/dflash2-draft","num_speculative_tokens":7}' --kv-cache-dtype fp8_e4m3 --kv-cache-memory 3221225472 \
+    --max-num-seqs 6 --block-size 2304 --moe-backend marlin --speculative-config '{"method":"dflash","model":"/models/dflash2-draft","num_speculative_tokens":7}' --kv-cache-dtype fp8_e4m3 --kv-cache-memory 6442450944 \
     --enforce-eager --max-num-batched-tokens 8192 \
     --tool-call-parser glm47 --enable-auto-tool-choice \
     --reasoning-parser glm45 --default-chat-template-kwargs '{"enable_thinking":false}' --chat-template /models/glm-5.3-flash-nvfp4/chat_template_mm.jinja \

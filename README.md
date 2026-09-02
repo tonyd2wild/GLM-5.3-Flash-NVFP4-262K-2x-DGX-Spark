@@ -152,7 +152,7 @@ harness is [`probes/bench_c1c6.py`](probes/bench_c1c6.py), run as:
 |---|---|
 | Single-stream decode, code prompt, warm | **46.9 tok/s** at 74.1 % draft acceptance |
 | Single-stream decode, structured output | **54–61 tok/s** (temp 0, 3 runs) |
-| KV pool | **581,040 tokens** @ 262K context, profiler-sized (see the ceiling section) |
+| KV pool | **678,661 tokens** @ 262K context at the shipped 6 GiB pin (PR #16; 581,040 under profiler sizing before it, see the ceiling section) |
 | Context | 262,144 |
 | KV cost of the drafter | **zero** — it slot-shares the MLA tensors |
 | Boot | ~15 min (shard load dominates) |

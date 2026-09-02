@@ -131,6 +131,22 @@ Shipped config (k=7), single stream by prompt:
 | json | 46.73 |
 | math | 41.26 |
 
+Real prompts, this exact recipe run verbatim on Reddie + Spark4 on 2026-09-01, isolated, temperature 0
+(40-prompt battery, 8 categories, three runs; source: the EXL3 comparison repo,
+https://github.com/tonyd2wild/GLM-5.3-Flash-EXL3-on-2x-NVIDIA-DGX-Spark/blob/main/results/summary.md):
+
+| | tok/s or s |
+|---|---|
+| prose decode, single stream | 18.8 (range 18.8 to 19.8) |
+| code decode, single stream | 52.2 (range 48.3 to 57.7) |
+| mixed load, four real prompts in flight | 31.4 tok/s aggregate, first token 1.97 s |
+| first token, fresh 1.6K prompt, c1 / c6 | 1.29 s / 4.53 s |
+| cold prefill, fresh 211K prompt | 2,763 tok/s |
+| counting prompt, single stream (ceiling only) | 64.0 |
+
+The 46.9 tok/s in the README (2026-08-28, `probes/bench_c1c6.py`, code prompt) and the 47.33 above
+(2026-09-02 doc) are the same measurement on different days and harnesses; quote either with its date.
+
 `num_speculative_tokens` is a workload choice, not a default: the same section measures k=5
 beating k=7 by +29.9% at C4 and +18.3% at C6, while losing on every single-stream prompt.
 Deep-concurrency serving should set k=5, or use the schedule with the crossover at C4:
@@ -176,3 +192,8 @@ Still current: `docs/TP2-SPEC-DEPTH-AND-KV-2026-09-02.md`,
 `docs/SM121-CRASH-FORENSICS-2026-08-27.md`, `docs/DFLASH2-SPECULATIVE-DECODING.md`,
 `docs/OPEN-PROBLEMS.md`, `docs/issue-*.md`, `docker/`, `probes/bench_c1c6.py`,
 `probes/bench_robust.py`, and the probe kit.
+
+<!-- launcher hashes, maintained by tools/check-current.sh --write -->
+sha256 5b3713873a92e6b86ab73f4a34942fc4429ee728d9d36add703fe7508ff43895  launch-glm53-vllm-tp2-dflash2.sh
+sha256 9e0ca234ece25786c9109fe9b3121e0ba024b32a741fb9cd7feb6861a6f76df6  launch-glm53-vllm-tp2.sh
+sha256 5d1fedd3b586819668d8f6f6759d2483fbd785aadad2a25139cbf90639c27929  launch-glm53-vllm-tp4.sh

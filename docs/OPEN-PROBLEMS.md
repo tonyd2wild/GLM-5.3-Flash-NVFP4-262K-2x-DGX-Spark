@@ -118,6 +118,15 @@ Also unresolved: after a livelock, the GPU stayed at 96 % / 10 W **even after th
 was killed** — the driver state did not clear. We did not establish whether a module reload
 recovers it or a reboot is required.
 
+**Field report (2026-09-03):** a second 2x GB10 fleet got through this with a
+per-node memory guard (drop caches and compact whenever `MemFree` falls under a
+floor, from launch to readiness) instead of swappiness, plus a warm pass before
+the first request; both loads and a 262K qualification then ran with zero major
+faults in the rank cgroups. Two traps on the way (`vm.min_free_kbytes` vs vLLM's
+`MemAvailable` startup check, and how little contiguous memory is left after the
+pinned allocation) are written up in
+[GB10-UNIFIED-MEMORY-FIELD-REPORT](GB10-UNIFIED-MEMORY-FIELD-REPORT.md).
+
 ---
 
 ## 5. Pinning `--kv-cache-memory` silently removes the activation reservation

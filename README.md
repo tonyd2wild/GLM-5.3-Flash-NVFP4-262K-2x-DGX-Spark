@@ -332,6 +332,7 @@ Blackwell part. Upstream-ready issue drafts with receipts:
 | [GB10-KV-MEMORY-LADDER](docs/GB10-KV-MEMORY-LADDER.md) | why KV budgets above vLLM's suggestion die, and the driver-level mechanism |
 | [KV-HUNT-672K-TP2-RECORD](docs/KV-HUNT-672K-TP2-RECORD.md) | the 8-attempt hunt past the 507K wall |
 | **[OPEN-PROBLEMS](docs/OPEN-PROBLEMS.md)** | **everything we broke and could not fix — reproducible, with next probes. Start here if you want to contribute.** |
+| [GB10-UNIFIED-MEMORY-FIELD-REPORT](docs/GB10-UNIFIED-MEMORY-FIELD-REPORT.md) | field report from a second fleet: the memory guard that ends the load-time driver failures, the min_free_kbytes trap, zero-fault warm-up, and hard power-offs with the GPU idle |
 
 **Debugging kit** (reusable for any day-0 model on new silicon): `probes/probe_sm121_nope_mla.py`
 (probe a kernel with your real geometry before patching arch gates) · `probes/probe_fa2_bisect.py`

@@ -62,6 +62,11 @@ GLM-5 drafter group, so this patch lives in the overlay.
 
 ## How to verify on your fleet
 
+The published tag `sm121-v11-dflash2` was built on 2026-08-28, before this
+patch, so the prebuilt path in the Quickstart and in
+`launch-glm53-vllm-tp2-dflash2.sh` does not carry the repair. Until a newer
+image is published, rebuild the overlay and point `IMAGE` at your own tag.
+
 1. Rebuild the DFlash2 overlay image. Both overlay build recipes
    (`overlay-dflash2/Dockerfile` and `docker/dflash2-overlay/Dockerfile`) now
    run `patch_prefix_cache_draft_group.py`; the patch aborts if the anchor text

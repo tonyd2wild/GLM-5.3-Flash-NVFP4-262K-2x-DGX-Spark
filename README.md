@@ -136,6 +136,9 @@ The chain is mostly linear (v1→v3→v4→…→v9); **v2 is an optional NaN-de
 Published image digests, so you can tell whether a local build differs:
 `sm121-v8` → `sha256:d77d375c742fc54f436dec5108b440f58f021bc6600052bf0e8fe5840357e78f` ·
 `sm121-v11-dflash2` → `sha256:4def0ef644cb2e9814136dcffd5e385e21bc594f48f3b292234051904abe85a6`
+
+Both tags predate `overlay-dflash2/patch_prefix_cache_draft_group.py`, so a pull of
+`sm121-v11-dflash2` still has the zero-hit coordinator; rebuild the overlay for the fix.
 </details>
 
 ---

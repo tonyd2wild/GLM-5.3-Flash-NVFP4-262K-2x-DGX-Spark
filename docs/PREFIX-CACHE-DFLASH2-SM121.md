@@ -62,9 +62,11 @@ GLM-5 drafter group, so this patch lives in the overlay.
 
 ## How to verify on your fleet
 
-1. Rebuild the DFlash2 overlay image (`overlay-dflash2/Dockerfile` now runs
-   `patch_prefix_cache_draft_group.py`; the patch aborts if the anchor text is
-   not found exactly once).
+1. Rebuild the DFlash2 overlay image. Both overlay build recipes
+   (`overlay-dflash2/Dockerfile` and `docker/dflash2-overlay/Dockerfile`) now
+   run `patch_prefix_cache_draft_group.py`; the patch aborts if the anchor text
+   is not found exactly once, and it checks that the draft-group predicate
+   accepts the drafter's sliding-window group and rejects the kpool tail cache.
 2. Send one long prompt twice with `temperature: 0` and read
    `curl :8000/metrics | grep prefix_cache`. The second request must add to
    `prefix_cache_hits_total`; with `--block-size 2304` the cached prefix is the

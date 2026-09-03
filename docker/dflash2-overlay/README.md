@@ -23,7 +23,7 @@ docker pull ghcr.io/tonyd2wild/vllm-glm53-flash:sm121-v8
 docker build -t vllm-glm53-flash:dflash2 -f Dockerfile .
 ```
 
-The `Dockerfile` COPYs the drafter model, the spec-decode module, and 4 patches into the
+The `Dockerfile` COPYs the drafter model, the spec-decode module, and 5 patches into the
 image's vLLM tree, then runs them and asserts `DFlash2DraftModel` is registered.
 
 ## File manifest
@@ -36,6 +36,7 @@ image's vLLM tree, then runs them and asserts `DFlash2DraftModel` is registered.
 | `patch_glm_aux_capture.py` | GLM aux-hidden-state capture for the drafter |
 | `patch_kv_page_lcm2.py` | KV page-size LCM alignment for the drafter |
 | `patch_glm5_drafter_group.py` | drafter group-size derivation (block-size math) |
+| `patch_prefix_cache_draft_group.py` | prefix-cache repair for the drafter group (#13) |
 | `sim_glm5_drafter.py` | standalone drafter simulation / sanity check |
 
 Full port writeup: **NOTES.md** and **GLUE-NOTES.md**.

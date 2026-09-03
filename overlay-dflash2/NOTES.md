@@ -166,3 +166,15 @@ sliding_window 2048. No embed_tokens / lm_head (borrowed from target).
   `qwen3_dflash2`, `dflash2.speculator`, `spec_decode.__init__`,
   `config.vllm`, `LogitsProcessor.get_top_k_tokens` presence, and registry
   resolution of `DFlash2DraftModel` — see the session report.
+
+## Prefix cache with the drafter group (`patch_prefix_cache_draft_group.py`)
+
+The drafter group (a short sliding-window KV cache group) made every prefix
+lookup end at zero length: with no group flagged as an EAGLE group the
+coordinator flagged all of them, and the draft window then shrank the hit that
+the target and Mamba groups had agreed on. The patch flags only the draft
+window group and stops it from shrinking the target hit. Two exact-string edits
+in `$VLLM/v1/core/kv_cache_coordinator.py`, run after
+`patch_glm5_drafter_group.py`. Measured on 2x GB10 at 262K context: hit rate
+0.986 on a repeated prompt, 258,048 cached tokens. Details and the verification
+recipe: `docs/PREFIX-CACHE-DFLASH2-SM121.md` (issue #13).

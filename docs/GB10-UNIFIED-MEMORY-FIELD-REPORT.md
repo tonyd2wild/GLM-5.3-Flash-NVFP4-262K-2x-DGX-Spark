@@ -73,6 +73,14 @@ If you gate on faults, gate after the warm pass, and never `docker exec`
 into a rank during the measured window: the exec joins the rank cgroup and
 its own faults are counted.
 
+One warning about the warm pass. It floods the page cache with the whole
+payload, which is the same memory state we were in during both hard
+power-offs in section 5. We accept that risk only because the pass runs
+while the ranks already hold their memory, it is short, and a node we can
+power-cycle is nearby. On a remote node, weigh it against section 5 first:
+read back only the files the ranks actually map, or skip the pass and gate
+on faults with a tolerance instead.
+
 ## 4. KV budget and capacity at 262K, one stream
 
 §5 warns that pinning `--kv-cache-memory` drops the activation reservation.
@@ -82,7 +90,7 @@ width 7, `--enforce-eager`, `--max-num-seqs 1`):
 | setting or result | value |
 |---|---:|
 | `--gpu-memory-utilization` | 0.84 |
-| `--kv-cache-memory-bytes` | 4 GiB |
+| `--kv-cache-memory-bytes` | 4294967296 (4 GiB) |
 | distributed KV capacity reported by vLLM | 414,615 tokens |
 | KV use during one 262,144-token request | 63 % |
 | cold TTFT, 261,632 prompt tokens | 191.7 s |
@@ -90,6 +98,9 @@ width 7, `--enforce-eager`, `--max-num-seqs 1`):
 | prefix-cache hit rate on the repeated 262K prompt | 0.986 |
 | DFlash2 acceptance | 0.928 |
 | policy minimum idle `MemAvailable` after load | 4.5 GiB (met) |
+
+The option is `--kv-cache-memory-bytes`; the launcher in this repository
+writes the same option as the prefix `--kv-cache-memory`.
 
 Higher budgets failed the startup check or the profile run on our nodes; the
 4 GiB pin is what ended the driver failures. One stream is deliberate: the

@@ -136,6 +136,9 @@ The chain is mostly linear (v1→v3→v4→…→v9); **v2 is an optional NaN-de
 Published image digests, so you can tell whether a local build differs:
 `sm121-v8` → `sha256:d77d375c742fc54f436dec5108b440f58f021bc6600052bf0e8fe5840357e78f` ·
 `sm121-v11-dflash2` → `sha256:4def0ef644cb2e9814136dcffd5e385e21bc594f48f3b292234051904abe85a6`
+
+Both tags predate `overlay-dflash2/patch_prefix_cache_draft_group.py`, so a pull of
+`sm121-v11-dflash2` still has the zero-hit coordinator; rebuild the overlay for the fix.
 </details>
 
 ---
@@ -236,6 +239,7 @@ point. It does not recover on its own.
 - **K=7 is optimal, don't sweep it.** Conditional per-position acceptance is nearly flat
   (0.93/0.89/0.84/0.81/0.79/0.59/0.94), so the last position still earns; the drafter's
   `block_size: 8` caps K at 7 anyway. A lower K gives a prettier *ratio* and worse throughput.
+- **Prefix cache now hits with DFlash2** once the overlay includes `patch_prefix_cache_draft_group.py` (#13). Agent sessions stop re-prefilling the whole conversation each turn: repeated 262K prompt, 0.986 hit rate, warm TTFT 3 s vs 192 s cold. See [PREFIX-CACHE-DFLASH2-SM121](docs/PREFIX-CACHE-DFLASH2-SM121.md).
 
 ---
 
@@ -327,6 +331,7 @@ Blackwell part. Upstream-ready issue drafts with receipts:
 |---|---|
 | [DEPLOY-REPORT](docs/DEPLOY-REPORT.md) | the seven day-0 bugs, root causes, receipts, every serve flag |
 | [DFLASH2-SPECULATIVE-DECODING](docs/DFLASH2-SPECULATIVE-DECODING.md) | the drafter port: four patches, the KV-layout fix, nine boots of failure modes |
+| [PREFIX-CACHE-DFLASH2-SM121](docs/PREFIX-CACHE-DFLASH2-SM121.md) | why the prefix cache never hit with the drafter group, the two-edit coordinator fix, and a 0.986 hit rate at 262K |
 | [BENCH-C1-C6-DFLASH2](docs/BENCH-C1-C6-DFLASH2.md) | full concurrency tables and how to read them |
 | [SM121-CRASH-FORENSICS](docs/SM121-CRASH-FORENSICS-2026-08-27.md) | why the fleet "randomly" died: a topk kernel bug and phantom KV backing |
 | [GB10-KV-MEMORY-LADDER](docs/GB10-KV-MEMORY-LADDER.md) | why KV budgets above vLLM's suggestion die, and the driver-level mechanism |
